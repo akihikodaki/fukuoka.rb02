@@ -22,24 +22,24 @@
 		<div class="reveal">
 			<div class="slides">
 				<section>
-					<h1>かわいいRuby: <span style="white-space: nowrap">拡張可能な</span><code>%</code>リテラル<span style="white-space: nowrap">宣言</span></h1>
+					<h1>かわいいRuby: <span style="white-space: nowrap">拡張可能な</span><code>%</code><span style="white-space: nowrap">リテラル</span><span style="white-space: nowrap">宣言</span></h1>
 					<address>Akihiko Odaki
 						&lt;<a href="mailto:nekomanma@pixiv.co.jp">nekomanma@pixiv.co.jp</a>&gt;</address>
 					<a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license" style="display: block"><img alt="クリエイティブ・コモンズ・ライセンス" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" style="border-width: 0" /></a>
 					この作品 (<code>index.html</code>) は
-					<a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license">クリエイティブ・コモンズ
+					<a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license"><span style="white-space: nowrap">クリエイティブ・</span><span style="white-space: nowrap">コモンズ</span>
 						表示 - 継承 4.0 国際
-						ライセンス</a>の下に提供されています.
-					表示される画像等はそれぞれの<span style="white-space: nowrap">ライセンス</span>に従います.
+						<span style="white-space: nowrap">ライセンス</span></a>の下に提供されています.
+					<span style="white-space: nowrap">表示される</span><span style="white-space: nowrap">画像</span>等はそれぞれの<span style="white-space: nowrap">ライセンス</span>に<span style="white-space: nowrap">従います</span>.
 				</section>
 				<section>
-					<h1><span style="text-transform: none">pixiv</span>でアルバイト<span style="white-space: nowrap">やってます</span></h1>
+					<h1><span style="white-space: nowrap; text-transform: none">pixivで</span><span style="white-space: nowrap">アルバイト</span><span style="white-space: nowrap">やってます</span></h1>
 					<p>2017年7月から</p>
 					<p>Rubyで書かれたマイクロブログサービス,
 						Mastodon及びその派生であるPawooとPawoo Musicを開発.
 						(発表内容とはあまり関係ない)</p>
 					<p>pixivは前夜祭の主催のようで, 今回,
-						刺客として送り込まれる.</p>
+						<span style="white-space: nowrap; text-transform: none">刺客として</span><span style="white-space: nowrap; text-transform: none">送り</span>込まれる.</p>
 				</section>
 				<section style="height: 100%">
 					<dl style="height: 100%">
@@ -127,7 +127,7 @@
 				</section>
 				<section>
 					<h1><code>lex_state</code></h1>
-					<p>現在状態がいい感じに定義されている<span style="white-space: nowrap">ビットフィールド</span></p>
+					<p>現在状態がいい感じに定義されて<span style="white-space: nowrap">いる</span><span style="white-space: nowrap">ビットフィールド</span></p>
 					<dl>
 						<dt><code>EXPR_BEG_bit</code></dt>
 						<dd>「(先行する) 改行が無視され,
@@ -140,7 +140,7 @@
 				<section>
 					<h1><code>lex_strterm</code></h1>
 					<p>文字列の終端を表す変数</p>
-					<p>…と思わせておいて実は式展開が有効かどうか<span style="white-space: nowrap">など</span>を表す<code>enum string_type</code>という<span style="white-space: nowrap">ビットフィールド,</span>
+					<p>…と思わせておいて実は式展開が<span style="white-space: nowrap">有効か</span><span style="white-space: nowrap">どうか</span><span style="white-space: nowrap">など</span>を表す<code>enum string_type</code><span style="white-space: nowrap">という</span><span style="white-space: nowrap">ビットフィールド,</span>
 						<span style="white-space: nowrap">開始</span>文字なども含む.</p>
 				</section>
 				<section>
@@ -172,16 +172,16 @@
 				<section>
 					<h1>実装の検討: 字句解析</h1>
 					<p>既存の<code>%</code>記法は現在の実装と同様に字句解析し,
-						これで定義されていない記法であると判別した<span style="white-space: nowrap">ときに</span><code>tPERCENT_BEG</code>を返す.</p>
+						<span style="white-space: nowrap">これ</span>で定義されていない記法であると<span style="white-space: nowrap">判別した</span><span style="white-space: nowrap">ときに</span><code>tPERCENT_BEG</code>を返す.</p>
 					<p><code>%</code>演算子の定義をパースしている部分で<code>%</code>以降の<span style="white-space: nowrap">アルファベット</span>も識別子に含めるように.</p>
 				</section>
 				<section>
 					<h1>実装の検討: 構文解析</h1>
 					<p><code>tPERCENT_BEG</code>で始まり<code>tPERCENT_END</code>で終わる,
 						<code>percent</code>ノードを追加.
-						メソッド呼び出しとして<span style="white-space: nowrap">解析</span>される.</p>
+						<span style="white-space: nowrap">メソッド呼び出し</span><span style="white-space: nowrap">として</span><span style="white-space: nowrap">解析</span>される.</p>
 					<p>メッセージ送信の構文のあとに<code>tPERCENT_BEG</code>があった場合のノードを追加.
-						同様にメソッド<span style="white-space: nowrap">呼び出し</span>として解析される.</p>
+						同様に<span style="white-space: nowrap">メソッド呼び出し</span>として解析される.</p>
 				</section>
 				<section>
 					<h1>実装: コード例</h1>
