@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link
+			crossorigin="anonymous"
+			href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/css/reveal.min.css"
+			integrity="sha384-od6PHEv3MHu8fQ3b6zLQCML7hjZNwNouqJfxOg48ubngnP3y5bxHOMC4VqwCC71D"
+			rel="stylesheet">
+		<link
+			crossorigin="anonymous"
+			href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.6.0/css/theme/black.css"
+			integrity="sha384-pUJd9NacZ6uAR7V8nScnUpThUEz0nxJlS1Dsj50sJ/shSFlby8qRhsoXPr0Qly4U"
+			rel="stylesheet">
+		<meta charset="UTF-8">
+		<style>
+			.reveal code {text-transform: none;}
+			.reveal h1 {font-size: 2em;}
+		</style>
+		<title>かわいいRuby: 拡張可能な%リテラル宣言</title>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h1>かわいいRuby: <span style="white-space: nowrap">拡張可能な</span><code>%</code>リテラル<span style="white-space: nowrap">宣言</span></h1>
+					<address>Akihiko Odaki
+						&lt;<a href="mailto:nekomanma@pixiv.co.jp">nekomanma@pixiv.co.jp</a>&gt;</address>
+					<a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license" style="display: block"><img alt="クリエイティブ・コモンズ・ライセンス" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" style="border-width: 0" /></a>
+					この作品 (<code>index.html</code>) は
+					<a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license">クリエイティブ・コモンズ
+						表示 - 継承 4.0 国際
+						ライセンス</a>の下に提供されています.
+					表示される画像等はそれぞれの<span style="white-space: nowrap">ライセンス</span>に従います.
+				</section>
+				<section>
+					<h1><span style="text-transform: none">pixiv</span>でアルバイト<span style="white-space: nowrap">やってます</span></h1>
+					<p>2017年7月から</p>
+					<p>Rubyで書かれたマイクロブログサービス,
+						Mastodon及びその派生であるPawooとPawoo Musicを開発.
+						(発表内容とはあまり関係ない)</p>
+					<p>pixivは前夜祭の主催のようで, 今回,
+						刺客として送り込まれる.</p>
+				</section>
+				<section style="height: 100%">
+					<dl style="height: 100%">
+						<dt style="height: 16%"><img alt="Mastodonのロゴ" src="logo_full.svg" style="box-sizing: border-box; height: 100%"></img></dt>
+						<dd><a href="https://joinmastodon.org/">https://joinmastodon.org/</a></dd>
+						<dt style="height: 16%"><img alt="Pawooのロゴ" src="logo_pawoo.png" style="box-sizing: border-box; height: 100%"></img></dt>
+						<dd><a href="https://pawoo.net/">https://pawoo.net/</a></dd>
+						<dt style="height: 16%"><img alt="Pawoo Musicのロゴ" src="logo.png" style="box-sizing: border-box; height: 100%"></dt>
+						<dd><a href="https://music.pawoo.net/">https://music.pawoo.net/</a></dd>
+					</dl>
+				</section>
+				<section>
+					<h1>Ruby?</h1>
+					<img src="ruby.svg"></img>
+				</section>
+				<section>
+					<h1>発表することがない!</h1>
+					<p>「1つのこと<sup>*</sup>をうまくやる」ことができている</p>
+					<p>私が開発しているのはアプリケーション</p>
+					<p>ならばこちらからRubyに近づかなければならない</p>
+					<aside>* オブジェクト指向による (Unix)
+						プログラミングの抽象化</aside>
+				</section>
+				<section>
+					<h1>Ruby Internals</h1>
+					<p>Rubyはオープンソース</p>
+					<ul>
+						<li>メーリングリスト</li>
+						<li>バグトラッカー</li>
+						<li>ソースコードリポジトリ</li>
+					</ul>
+					<p>まずはバグトラッカーを見てみる</p>
+					<p>十分強力な文法を持っているように思えるRuby<span style="white-space: nowrap">だが</span>,
+						拡張の提案は未だ多い</p>
+				</section>
+				<section>
+					<h1>機能 #11529
+						<span style="white-space: nowrap">『拡張可能な</span>%リテラル宣言』</h1>
+					<p><code>%q{select foo from bar}</code></p>
+					<p>では<code>%sql{select foo from bar}</code>は?</p>
+					<p><a href="https://bugs.ruby-lang.org/issues/11529"><img alt="バグトラッカーのスクリーンショット" src="issue_top.png"></img></a></p>
+				</section>
+				<section>
+					<h1>洞察</h1>
+					<p><code>%</code>は演算子でもある</p>
+					<p><code>%Q%%%%%%</code></p>
+					<p>辛そう</p>
+					<p><a href="https://bugs.ruby-lang.org/issues/11529#note-2"><img alt="mame (Yusuke Endoh) 氏がバグトラッカーで%Q%%%%%%をRubyの一番かわいいところと述べているスクリーンショット" src="issue_mame.png"></img></a></p>
+				</section>
+				<section>
+					<h1><code>parse.y</code></h1>
+					<p>Yaccを使用.</p>
+					<p>字句解析にはflexなどは使っておらず,
+						直接書かれていて複雑そうである.</p>
+				</section>
+				<section>
+					<h1><code>%</code>が字句解析されるまで</h1>
+					<ol>
+						<li><code>yylex</code></li>
+						<li><code>parser_yylex</code></li>
+						<li><code>parse_percent</code></li>
+					</ol>
+				</section>
+				<section>
+					<h1><code>yylex</code></h1>
+					<p><code>例のアレ</code></p>
+					<p><ol>
+						<li>状態の復元</li>
+						<li><code>parser_yylex</code>の呼び出し</li>
+						</li>状態の保存</li>
+					</ol></p>
+				</section>
+				<section>
+					<h1><code>parser_yylex</code></h1>
+					<p>実際に字句解析が始まるのはここから</p>
+					<p>文字列が開始されているならば文字列の解析,
+						そうでなければトークンの最初の文字によって特殊化された別の関数を呼び出す.</p>
+				</section>
+				<section>
+					<h1><code>parse_percent</code></h1>
+					<p>読んで字のごとく</p>
+					<p>ここにきてようやく演算子か,
+						%記法の開始かが<span style="white-space: nowrap">判定</span>される</p>
+					<p>%記法であれば, 文字列, ワードリスト等の開始を<span style="white-space: nowrap">意味</span>するトークンを返す.</p>
+				</section>
+				<section>
+					<h1><code>lex_state</code></h1>
+					<p>現在状態がいい感じに定義されている<span style="white-space: nowrap">ビットフィールド</span></p>
+					<dl>
+						<dt><code>EXPR_BEG_bit</code></dt>
+						<dd>「(先行する) 改行が無視され,
+							<code>+/-</code>が
+							(演算子ではなく)
+							符号として解釈される」<br>
+							→ %も演算子ではなく%記法の開始を意味する</dd>
+					</dl>
+				</section>
+				<section>
+					<h1><code>lex_strterm</code></h1>
+					<p>文字列の終端を表す変数</p>
+					<p>…と思わせておいて実は式展開が有効かどうか<span style="white-space: nowrap">など</span>を表す<code>enum string_type</code>という<span style="white-space: nowrap">ビットフィールド,</span>
+						<span style="white-space: nowrap">開始</span>文字なども含む.</p>
+				</section>
+				<section>
+					<h1>仕様策定: 定義</h1>
+					<div>
+						<p><code>def %foo</code>などと定義されたメソッドに文字列を<span style="white-space: nowrap">第1</span>引数として渡す</p>
+						<p><code>%</code>メソッドは演算子と被るので定義できない</p>
+					</div>
+				</section>
+				<section>
+					<h1>仕様策定: リテラル</h1>
+					<div>
+						<p><code>%</code>のすぐあとが大文字
+							(例: <code>%FOO</code>)
+							の場合は式展開を行う</code>
+						<p><code>%W</code>相当のものは式展開内の空白とリテラル内の<span style="white-space: nowrap">空白</span>を区別できないので実装できない</code></p>
+					</div>
+						<p>クラスメソッドの場合は<code>Foo.%bar</code>という形で使用できる</p>
+						<p>定義から見れば分かりやすいが, いざ使うとなると見た目が若干悪い</p>
+					<div>
+				</section>
+				<section>
+					<h1>実装の検討: 字句, 状態の追加</h1>
+					<p><code>tPERCENT_BEG</code>という字句を追加. <code>%</code>記法におけるメソッド名を表す.</p>
+					<p><code>tPERCENT_END</code>という字句を追加. 文字列を表す.</code>
+					<p><code>string_type</code>に<code>str_percent</code>を追加.
+						指定されていた場合, 文字列の終端で<code>tPERCENT_END</code>が<span style="white-space: nowrap">返される.</span></p>
+				</section>
+				<section>
+					<h1>実装の検討: 字句解析</h1>
+					<p>既存の<code>%</code>記法は現在の実装と同様に字句解析し,
+						これで定義されていない記法であると判別した<span style="white-space: nowrap">ときに</span><code>tPERCENT_BEG</code>を返す.</p>
+					<p><code>%</code>演算子の定義をパースしている部分で<code>%</code>以降の<span style="white-space: nowrap">アルファベット</span>も識別子に含めるように.</p>
+				</section>
+				<section>
+					<h1>実装の検討: 構文解析</h1>
+					<p><code>tPERCENT_BEG</code>で始まり<code>tPERCENT_END</code>で終わる,
+						<code>percent</code>ノードを追加.
+						メソッド呼び出しとして<span style="white-space: nowrap">解析</span>される.</p>
+					<p>メッセージ送信の構文のあとに<code>tPERCENT_BEG</code>があった場合のノードを追加.
+						同様にメソッド<span style="white-space: nowrap">呼び出し</span>として解析される.</p>
+				</section>
+				<section>
+					<h1>実装: コード例</h1>
+					<pre><code>module M
+	def self.%m s
+		'hello, ' + s
+	end
+end
+
+p M.%m{world}</code></pre>
+				</section>
+				<section>
+					<h1>実装: パースツリー</h1>
+					<code>ruby --dump=parsetree</code>
+					<pre><code>@ NODE_CALL (line: 7. lineno: 7, column: 2)
++- nd_mid: :%m
++- nd_recv:
+|   @ NODE_CONST (line: 7. lineno: 7, column: 2)
+|   +- nd_vid: :M
++- nd_args:
+    @ NODE_ARRAY (line: 7. lineno: 7, column: 4)
+    +- nd_alen: 1
+    +- nd_head:
+@ NODE_STR (line: 7. lineno: 7, column: 4)
++- nd_lit: "world"
+    +- nd_next:
+        (null node)</code></pre>
+					<aside>* 一部抜粋</aside>
+				</section>
+				<section>
+					<h1>実装: 結果</h1>
+					<code>ruby</code>
+					<pre><code>"hello, world"</code></pre>
+					<p>やったぜ</p>
+				</section>
+				<section>
+					<h1>…本当にこれでいいの?</h1>
+					<dl>
+						<dt><code>%</code>単独で定義できない</dt>
+						<dd><code>%</code>単独での定義の利用場面が思い浮かばないが…「かわいくない」</dd>
+						<dt>式展開内か式展開外か判別できない問題</dt>
+						<dd><code>sprintf</code>形式で返答すると扱いやすいが<code>%</code>を<code>%%</code>にする必要があるなど面倒がある. 式展開内の範囲を配列にして渡すという方法も.</dd>
+					</dl>
+				</section>
+				<section>
+					<h1>かわいいRuby</h1>
+					<img src="hotakey.png" style="border: 0; background: none; box-shadow: none; float: right" title="ｱｶﾈﾁｬﾝｶﾜｲｲﾔｯﾀｰ"></img>
+					<p>お年頃のRuby</p>
+					<p>スピードも気になるけど,
+						<span style="white-space: nowrap">おしゃれ</span>もしっかりやっていきましょう.</p>
+				</section>
+				<section>
+					<h1>参照</h1>
+					<dl>
+						<dt>Feature #11529: extensible % literal declarations - Ruby trunk - Ruby Issue Tracking System</dt>
+						<dd><a href="https://bugs.ruby-lang.org/issues/11529">https://bugs.ruby-lang.org/issues/11529</a></dd>
+					</dl>
+				</section>
+				<section>
+					<h1>ライセンス (敬称略)</h1>
+					<dl>
+						<dt><a href="index.html"><code>index.html</code></a></dt>
+						<dd>Akihiko Odakiにより, <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license">クリエイティブ・コモンズ 表示 - 継承 4.0 国際 ライセンス</a>の下に提供されています.</dd>
+						<dt><a href="logo_full.svg"><code>logo_full.svg</code></a></dt>
+						<dd>Gargronにより, <a href="agpl-3.0.html">AGPL-3.0</a>の下に提供されています.</dd>
+					</dl>
+				</section>
+				<section>
+					<h1>ライセンス (敬称略)</h1>
+					<dl>
+						<dt><a href="logo_pawoo.png"><code>logo_pawoo.png</code></a></dt>
+						<dd>pixiv株式会社により, <a href="agpl-3.0.html">AGPL-3.0</a>の下に提供されています.</dd>
+						<dt><a href="logo.png"><code>logo.png</code></a></dt>
+						<dd>pixiv株式会社により, <a href="agpl-3.0.html">AGPL-3.0</a>の下に提供されています.</dd>
+						<dt><a href="ruby.svg"><code>ruby.svg</code></a></dt>
+						<dd>Yukihiro Matsumotoにより, <a href="https://creativecommons.org/licenses/by-sa/2.5/">クリエイティブ・コモンズ 表示 - 継承 2.5 国際 ライセンス</a>の下に提供されています.</dd>
+					</dl>
+				</section>
+				<section>
+					<h1>ライセンス (敬称略)</h1>
+					<dl>
+						<dd><a href="https://pawoo.net/@pacochi">@pacochi</a>により,
+							<a href="https://icons8.com/good-boy-license/">Good Boy License</a>の下に提供されています.
+							なお, このキャラクターは<a href="https://mstdn.maud.io/">mstdn.maud.io</a>というMastodonインスタンスの管理者であるほた氏の周りでよく見かける『藍川 茜』という子で,
+							Rubyとはかわいいことと「赤い目」をしているという以外あまり関係はないです.</dd>
+					</dl>
+				</section>
+			</div>
+		</div>
+		<script
+			crossorigin="anonymous"
+			integrity="sha384-B50YLPnNFrPfHyhGGRU4zxA7CrsohSuCgHXdcPGJz0dy+4JMUL36kdK51a5qxy6F"
+			src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/3.5.0/js/reveal.min.js">
+		</script>
+		<script>Reveal.initialize();</script>
+	</body>
+</html>
